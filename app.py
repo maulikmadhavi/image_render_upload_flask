@@ -36,6 +36,14 @@ def save_image_details(filename, width, height, upload_time):
 
     return df
 
+# Function to load existing image data from CSV
+def load_existing_data():
+    csv_file = os.path.join(app.config['UPLOAD_FOLDER'], 'image_data.csv')
+    if os.path.exists(csv_file):
+        return pd.read_csv(csv_file)
+    else:
+        return pd.DataFrame(columns=['filename', 'width', 'height', 'upload_time'])
+
 # Route for the upload form and displaying image details
 @app.route('/', methods=['GET', 'POST'])
 def upload_and_display():
@@ -51,26 +59,32 @@ def upload_and_display():
             return redirect(request.url)
         
         if file:
-            # Save the uploaded file
-            filename = file.filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Get the upload time
+            upload_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            
+            # Add a unique timestamp to the filename
+            original_filename = file.filename
+            filename, ext = os.path.splitext(original_filename)
+            new_filename = f"{filename}_{upload_time}{ext}"
+
+            # Save the uploaded file with the new filename
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             file.save(file_path)
 
             # Open the image to extract width and height
             image = Image.open(file_path)
             width, height = image.size
             
-            # Get the upload time
-            upload_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
             # Save the details to CSV and return the updated data
-            df = save_image_details(filename, width, height, upload_time)
+            df = save_image_details(new_filename, width, height, upload_time)
             
-            # Render the same template but pass the image details
-            return render_template('upload_and_display.html', table=df.to_dict('records'))
+            # Redirect to the display page to prevent form resubmission
+            return redirect(url_for('upload_and_display'))
 
-    # If it's a GET request, just render the form without any table
-    return render_template('upload_and_display.html', table=None)
+    # If it's a GET request, load existing data and render the form with table
+    df = load_existing_data()
+    return render_template('upload_and_display.html', table=None if df.empty else df.to_dict('records'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
