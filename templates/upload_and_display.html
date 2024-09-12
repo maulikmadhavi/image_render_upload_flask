@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Details</title>
+</head>
+<body>
+    <h1>Upload an Image</h1>
+
+    <!-- Image upload form -->
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <!-- Display the table only if there are entries -->
+    {% if table %}
+        <h2>Uploaded Image Details</h2>
+        <table border="1">
+            <tr>
+                <th>Filename</th>
+                <th>Width (px)</th>
+                <th>Height (px)</th>
+                <th>Upload Time</th>
+            </tr>
+            {% for row in table %}
+            <tr>
+                <td>{{ row['filename'] }}</td>
+                <td>{{ row['width'] }}</td>
+                <td>{{ row['height'] }}</td>
+                <td>{{ row['upload_time'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>
