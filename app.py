@@ -6,7 +6,7 @@ from datetime import datetime
 
 # Initialize the Flask app
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads/'
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'  # Serve images from static folder
 app.secret_key = "secret_key"
 
 # Ensure the upload folder exists
@@ -22,7 +22,7 @@ def save_image_details(filename, width, height, upload_time):
         "upload_time": upload_time
     }
     
-    csv_file = os.path.join(app.config['UPLOAD_FOLDER'], 'image_data.csv')
+    csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../image_data.csv')
 
     # Load existing data or create a new dataframe
     if os.path.exists(csv_file):
@@ -38,7 +38,7 @@ def save_image_details(filename, width, height, upload_time):
 
 # Function to load existing image data from CSV
 def load_existing_data():
-    csv_file = os.path.join(app.config['UPLOAD_FOLDER'], 'image_data.csv')
+    csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../image_data.csv')
     if os.path.exists(csv_file):
         return pd.read_csv(csv_file)
     else:
@@ -67,7 +67,7 @@ def upload_and_display():
             filename, ext = os.path.splitext(original_filename)
             new_filename = f"{filename}_{upload_time}{ext}"
 
-            # Save the uploaded file with the new filename
+            # Save the uploaded file with the new filename in static/uploads/
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             file.save(file_path)
 
