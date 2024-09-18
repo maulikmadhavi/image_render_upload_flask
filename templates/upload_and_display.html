@@ -32,14 +32,15 @@
         {% for row in table %}
         <tr>
             <td>
-                <a href="{{ url_for('static', filename='uploads/' ~ row['filename']) }}" target="_blank" title="Click to view image">{{ row['filename'] }}</a>
+                <a href="{{ url_for('static', filename='renames/' ~ row['rename_filename']) }}" 
+                target="_blank" title="Click to view image">{{ row['filename'] }}</a>
             </td>
             <td>{{ row['width'] }}</td>
             <td>{{ row['height'] }}</td>
             <td>{{ row['upload_time'] }}</td>
             <td>
                 <form method="POST" action="{{ url_for('upload_and_display') }}">
-                    <input type="hidden" name="filename" value="{{ row['filename'] }}">
+                    <input type="hidden" name="rename_filename" value="{{ row['rename_filename'] }}">
                     <input type="hidden" name="delete" value="true">
                     <input type="submit" value="Delete">
                 </form>

@@ -3,23 +3,30 @@ from PIL import Image
 import os
 import pandas as pd
 from datetime import datetime
+import shutil
 
 # Initialize the Flask app
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads/'  # Serve images from static folder
 app.secret_key = "secret_key"
 
+RENAME_FOLDER = "static/renames/"  # Folder to store renamed images (save images with time stamp)
 # Ensure the upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
+# Ensure the rename folder exists
+if not os.path.exists(RENAME_FOLDER):
+    os.makedirs(RENAME_FOLDER)
+
 # Function to save image details to CSV
-def save_image_details(filename, width, height, upload_time):
+def save_image_details(filename, width, height, upload_time, rename_filename):
     data = {
         "filename": filename,
         "width": width,
         "height": height,
-        "upload_time": upload_time
+        "upload_time": upload_time,
+         "rename_filename": rename_filename
     }
     
     csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../image_data.csv')
@@ -42,7 +49,7 @@ def load_existing_data():
     if os.path.exists(csv_file):
         return pd.read_csv(csv_file)
     else:
-        return pd.DataFrame(columns=['filename', 'width', 'height', 'upload_time'])
+        return pd.DataFrame(columns=['filename', 'width', 'height', 'upload_time', 'rename_filename'])
 
 # Route for the upload form and displaying image details
 @app.route('/', methods=['GET', 'POST'])
@@ -58,20 +65,20 @@ def upload_and_display():
         
     if request.method == 'POST':
         if 'delete' in request.form:
-            filename = request.form.get('filename')
+            rename_filename = request.form.get('rename_filename')
             csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../image_data.csv')
             
             if os.path.exists(csv_file):
                 df = pd.read_csv(csv_file)
-                df = df[df['filename'] != filename]
+                df = df[df['rename_filename'] != rename_filename]
                 df.to_csv(csv_file, index=False)
                 
                 # Also delete the image file from the uploads folder
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file_path = os.path.join(RENAME_FOLDER, rename_filename)
                 if os.path.exists(file_path):
                     os.remove(file_path)
                 
-                flash(f'Image {filename} deleted successfully.')
+                flash(f'Image {rename_filename} deleted successfully.')
             else:
                 flash('No data file found.')
             
@@ -101,15 +108,16 @@ def upload_and_display():
             file.save(file_path)
 
             # # Save the uploaded file with the new filename in static/uploads/
-            # file_path = os.path.join(RENAME_FOLDER, new_filename)
-            # file.save(file_path)
+            rename_filename = f"{upload_time}{ext}"
+            rename_file_path = os.path.join(RENAME_FOLDER, rename_filename)
+            shutil.copyfile(file_path, rename_file_path)
             
             # Open the image to extract width and height
             image = Image.open(file_path)
             width, height = image.size
             
             # Save the details to CSV and return the updated data
-            df = save_image_details(new_filename, width, height, upload_time)
+            df = save_image_details(new_filename, width, height, upload_time, rename_filename)
             
             # Redirect to the display page to prevent form resubmission
             return redirect(url_for('upload_and_display'))
