@@ -48,6 +48,26 @@ def load_existing_data():
 @app.route('/', methods=['GET', 'POST'])
 def upload_and_display():
     if request.method == 'POST':
+        if 'delete' in request.form:
+            filename = request.form.get('filename')
+            csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../image_data.csv')
+            
+            if os.path.exists(csv_file):
+                df = pd.read_csv(csv_file)
+                df = df[df['filename'] != filename]
+                df.to_csv(csv_file, index=False)
+                
+                # Also delete the image file from the uploads folder
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                
+                flash(f'Image {filename} deleted successfully.')
+            else:
+                flash('No data file found.')
+            
+            return redirect(url_for('upload_and_display'))
+        
         if 'image' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -71,6 +91,10 @@ def upload_and_display():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             file.save(file_path)
 
+            # # Save the uploaded file with the new filename in static/uploads/
+            # file_path = os.path.join(RENAME_FOLDER, new_filename)
+            # file.save(file_path)
+            
             # Open the image to extract width and height
             image = Image.open(file_path)
             width, height = image.size

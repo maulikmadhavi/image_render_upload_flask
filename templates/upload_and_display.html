@@ -28,6 +28,7 @@
             <th>Width (px)</th>
             <th>Height (px)</th>
             <th>Upload Time</th>
+            <th>Action</th>
         </tr>
         {% for row in table %}
         <tr>
@@ -36,6 +37,13 @@
             <td>{{ row['width'] }}</td>
             <td>{{ row['height'] }}</td>
             <td>{{ row['upload_time'] }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('upload_and_display') }}">
+                    <input type="hidden" name="filename" value="{{ row['filename'] }}">
+                    <input type="hidden" name="delete" value="true">
+                    <input type="submit" value="Delete">
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>
