@@ -47,6 +47,15 @@ def load_existing_data():
 # Route for the upload form and displaying image details
 @app.route('/', methods=['GET', 'POST'])
 def upload_and_display():
+    print(f"Requests: form = {request.form} , \
+        method = {request.method}, file = {request.files}" )
+    
+    for k,v in request.form.items():
+        print(f"Request form:   {k} = {v}")
+    
+    for k,v in request.files.items():
+        print(f"Request files: {k} = {v}")
+        
     if request.method == 'POST':
         if 'delete' in request.form:
             filename = request.form.get('filename')

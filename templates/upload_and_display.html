@@ -23,17 +23,17 @@
     <h2>Uploaded Image Details</h2>
     <table>
         <tr>
-            <th>Image</th>
             <th>Filename</th>
             <th>Width (px)</th>
             <th>Height (px)</th>
             <th>Upload Time</th>
-            <th>Action</th>
+            <th>Delete</th>
         </tr>
         {% for row in table %}
         <tr>
-            <td><img src="{{ url_for('static', filename='uploads/' ~ row['filename']) }}" width="150"></td>
-            <td>{{ row['filename'] }}</td>
+            <td>
+                <a href="{{ url_for('static', filename='uploads/' ~ row['filename']) }}" target="_blank" title="Click to view image">{{ row['filename'] }}</a>
+            </td>
             <td>{{ row['width'] }}</td>
             <td>{{ row['height'] }}</td>
             <td>{{ row['upload_time'] }}</td>
@@ -49,4 +49,21 @@
     </table>
     {% endif %}
 </body>
+
+
+<div class="message-box">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+</div>
+
+
+
+
 </html>
