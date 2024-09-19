@@ -4,6 +4,8 @@ import os
 import pandas as pd
 from datetime import datetime
 import shutil
+from utils import Model
+
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -18,6 +20,7 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 # Ensure the rename folder exists
 if not os.path.exists(RENAME_FOLDER):
     os.makedirs(RENAME_FOLDER)
+model = Model()
 
 # Function to save image details to CSV
 def save_image_details(filename, width, height, upload_time, rename_filename):
@@ -113,9 +116,9 @@ def upload_and_display():
             shutil.copyfile(file_path, rename_file_path)
             
             # Open the image to extract width and height
-            image = Image.open(file_path)
-            width, height = image.size
-            
+            # image = Image.open(file_path)
+            # width, height = image.size
+            width, height = model.get_info()
             # Save the details to CSV and return the updated data
             df = save_image_details(new_filename, width, height, upload_time, rename_filename)
             
@@ -128,4 +131,4 @@ def upload_and_display():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
