@@ -4,10 +4,12 @@ from datetime import datetime
 import os
 import shutil
 import pandas as pd
+from utils import VideoProcessor
+
 
 # Initialize the Flask app
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads/'
+app.config['UPLOAD_FOLDER'] = 'static/uploads_video/'
 app.secret_key = "secret_key"
 
 # Ensure the upload folder exists
@@ -15,17 +17,20 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 # Ensure the rename folder exists
-RENAME_FOLDER = 'static/renames/'
+RENAME_FOLDER = 'static/renames_video/'
 if not os.path.exists(RENAME_FOLDER):
     os.makedirs(RENAME_FOLDER)
 
+vp = VideoProcessor()
+
 # Function to save video details to CSV
-def save_video_details(filename, resolution, upload_time, rename_filename):
+def save_video_details(filename, resolution, upload_time, rename_filename, video_captions):
     data = {
         "filename": filename,
         "resolution": resolution,
         "upload_time": upload_time,
-        "rename_filename": rename_filename
+        "rename_filename": rename_filename,
+        "video_captions": video_captions
     }
 
     csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../video_data.csv')
@@ -48,7 +53,7 @@ def load_existing_data():
     if os.path.exists(csv_file):
         return pd.read_csv(csv_file)
     else:
-        return pd.DataFrame(columns=['filename', 'resolution', 'upload_time', 'rename_filename'])
+        return pd.DataFrame(columns=['filename', 'resolution', 'upload_time', 'rename_filename', "video_captions"])
 
 # Route for the upload form and displaying video details
 @app.route('/', methods=['GET', 'POST'])
@@ -105,14 +110,19 @@ def video_upload_and_display():
             # Open the video to extract resolution
             try:
                 video = VideoFileClip(file_path)
+                
                 resolution = f"{video.w}x{video.h}"
+                _, video_captions = vp.get_caption(file_path)
+                # print(video_captions)
+                # all_caps = [f"Frame {i}: {video_captions[i]}" for i in video_captions]
+                # all_caps = '\n'.join(all_caps)
                 video.close()
             except Exception as e:
                 flash(f"Could not process the video: {str(e)}")
                 return redirect(request.url)
 
             # Save the details to CSV and return the updated data
-            df = save_video_details(new_filename, resolution, upload_time, rename_filename)
+            df = save_video_details(new_filename, resolution, upload_time, rename_filename, video_captions)
 
             # Redirect to the display page to prevent form resubmission
             return redirect(url_for('video_upload_and_display'))
@@ -122,4 +132,4 @@ def video_upload_and_display():
     return render_template('video_upload_and_display.html', table=df.to_dict('records') if not df.empty else None)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
