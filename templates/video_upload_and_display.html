@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload and Display Video</title>
+    <style>
+        table, th, td {
+            border: 1px solid rgb(126, 56, 56);
+            border-collapse: collapse;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload a Video</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="video">
+        <input type="submit" value="Upload">
+    </form>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    {% if table %}
+    <h2>Uploaded Video Details</h2>
+    <table>
+        <tr>
+            <th>Filename</th>
+            <th>Resolution</th>
+            <th>Upload Time</th>
+            <th>Renamed Filename</th>
+            <th>Video</th>
+            <th>Action</th>
+        </tr>
+        {% for row in table %}
+        <tr>
+            <td>{{ row['filename'] }}</td>
+            <td>{{ row['resolution'] }}</td>
+            <td>{{ row['upload_time'] }}</td>
+            <td>{{ row['rename_filename'] }}</td>
+            <td>
+                <video width="320" height="240" controls>
+                    <source src="{{ url_for('static', filename='renames/' ~ row['rename_filename']) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </td>
+            <td>
+                <form method="POST" action="{{ url_for('video_upload_and_display') }}">
+                    <input type="hidden" name="rename_filename" value="{{ row['rename_filename'] }}">
+                    <input type="hidden" name="delete" value="true">
+                    <input type="submit" value="Delete">
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</body>
+</html>
