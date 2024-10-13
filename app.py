@@ -116,9 +116,9 @@ def upload_and_display():
             shutil.copyfile(file_path, rename_file_path)
             
             # Open the image to extract width and height
-            # image = Image.open(file_path)
-            # width, height = image.size
-            width, height = model.get_info()
+            image = Image.open(file_path)
+            width, height = image.size
+            # width, height = model.get_info()
             # Save the details to CSV and return the updated data
             df = save_image_details(new_filename, width, height, upload_time, rename_filename)
             
