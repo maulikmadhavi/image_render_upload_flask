@@ -69,7 +69,7 @@ class VideoProcessor:
         
         time_caption_str = ""
         if wrap_time_str:
-            time_caption_str = "\n".join([f"{k//fps}-{(k+time_step)//fps} sec: {v}" for k, v in caption_dict.items()])
+            time_caption_str = "\n".join([f"{k//fps}-{time_step + k//fps} sec: {v}" for k, v in caption_dict.items()])
         else:
             time_caption_str = "\n".join([f"{k}: {v}" for k, v in caption_dict.items()])
         return caption_dict, time_caption_str
