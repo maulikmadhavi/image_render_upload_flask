@@ -5,6 +5,7 @@ import decord
 from decord import VideoReader
 from decord import cpu, gpu
 from tqdm import tqdm
+from groq import Groq
 
 class Florence2:
     def __init__(self) -> None:
@@ -67,10 +68,10 @@ class VideoProcessor:
         
         time_caption_str = ""
         if wrap_time_str:
-            time_caption_str = "\n".join([f"{k//fps} sec: {v}" for k, v in caption_dict.items()])
+            time_caption_str = "\n".join([f"{k//fps}-{(k+time_step)//fps} sec: {v}" for k, v in caption_dict.items()])
         else:
             time_caption_str = "\n".join([f"{k}: {v}" for k, v in caption_dict.items()])
-            
+        breakpoint()
         return caption_dict, time_caption_str
 class Model:
     def __init__(self) -> None:        
@@ -80,6 +81,45 @@ class Model:
         image = Image.open(file_path)
         width, height = image.size
         return width, height
+
+
+class LLM:
+    def __init__(self) -> None:
+        
+        self.client = Groq()
+    
+    def run(self, num_frames: str, caption: str):
+        breakpoint()
+        prompt = f"""
+        The following is a series of detailed image captions describing the content of a video frame by frame. The frames range from 0 seconds to {num_frames} seconds, with each frame depicting various scenes involving digital illustrations, computer screens, handwritten notes, and on-screen text. Your task is to generate a comprehensive summary of the video that captures the main themes and key events, without listing every individual frame description. Focus on providing an overview of the major changes or activities depicted in the frames and any recurring elements.
+
+        Here is the list of image descriptions:
+        {caption}
+        """
+        
+        
+        print("********************** ")
+        
+        print(prompt)
+        print("****************")
+        completion = self.client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.01,
+            max_tokens=1024,
+            top_p=1,
+            stream=False,
+            stop=None,
+        )
+        return str(completion.choices[0].message.content)
+
+
+
 
 if __name__ == "__main__":
     vp = VideoProcessor('/home/maulik/Documents/Tool/Coding_practice/flask_image_summarizer/static/renames/2024-10-14_00-33-55.mp4')

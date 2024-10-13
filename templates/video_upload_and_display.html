@@ -5,10 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload and Display Video</title>
     <style>
-        table, th, td {
-            border: 1px solid rgb(126, 56, 56);
-            border-collapse: collapse;
-            padding: 10px;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        input[type="file"], input[type="submit"] {
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+            border: 1px solid #444;
+        }
+        
+        td, th {
+            border: 1px solid #444;
+            padding: 8px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        video {
+            display: block;
+            margin: 0 auto;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            text-align: center;
+        }
+        li {
+            color: red;
         }
     </style>
 </head>
@@ -34,9 +85,8 @@
     <table>
         <tr>
             <th>Filename</th>
-            <th>Resolution</th>
             <th>Upload Time</th>
-            <th>Renamed Filename</th>
+            <th>Summary</th>
             <th>Video Captions</th>
             <th>Video</th>
             <th>Action</th>
@@ -44,19 +94,18 @@
         {% for row in table %}
         <tr>
             <td>{{ row['filename'] }}</td>
-            <td>{{ row['resolution'] }}</td>
             <td>{{ row['upload_time'] }}</td>
-            <td>{{ row['rename_filename'] }}</td>
+            <td>{{ row['summary'] }}</td>
             <td> {{ row['video_captions'] }}</td>
             <td>
                 <video width="320" height="240" controls>
-                    <source src="{{ url_for('static', filename='renames_video/' ~ row['rename_filename']) }}" type="video/mp4">
+                    <source src="{{ url_for('static', filename='uploads_video/' ~ row['filename']) }}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             </td>
             <td>
                 <form method="POST" action="{{ url_for('video_upload_and_display') }}">
-                    <input type="hidden" name="rename_filename" value="{{ row['rename_filename'] }}">
+                    <input type="hidden" name="filename" value="{{ row['filename'] }}">
                     <input type="hidden" name="delete" value="true">
                     <input type="submit" value="Delete">
                 </form>

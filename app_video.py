@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from moviepy.editor import VideoFileClip
 from datetime import datetime
 import os
 import shutil
 import pandas as pd
-from utils import VideoProcessor
+from utils import VideoProcessor, LLM
 
 
 # Initialize the Flask app
@@ -16,20 +15,19 @@ app.secret_key = "secret_key"
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Ensure the rename folder exists
-RENAME_FOLDER = 'static/renames_video/'
-if not os.path.exists(RENAME_FOLDER):
-    os.makedirs(RENAME_FOLDER)
+# # Ensure the rename folder exists
+# RENAME_FOLDER = 'static/renames_video/'
+# if not os.path.exists(RENAME_FOLDER):
+#     os.makedirs(RENAME_FOLDER)
 
 vp = VideoProcessor()
-
+llm = LLM()
 # Function to save video details to CSV
-def save_video_details(filename, resolution, upload_time, rename_filename, video_captions):
+def save_video_details(filename, upload_time, summary, video_captions):
     data = {
         "filename": filename,
-        "resolution": resolution,
         "upload_time": upload_time,
-        "rename_filename": rename_filename,
+        "summary": summary,
         "video_captions": video_captions
     }
 
@@ -53,27 +51,27 @@ def load_existing_data():
     if os.path.exists(csv_file):
         return pd.read_csv(csv_file)
     else:
-        return pd.DataFrame(columns=['filename', 'resolution', 'upload_time', 'rename_filename', "video_captions"])
+        return pd.DataFrame(columns=['filename',  'upload_time', 'summary', "video_captions"])
 
 # Route for the upload form and displaying video details
 @app.route('/', methods=['GET', 'POST'])
 def video_upload_and_display():
     if request.method == 'POST':
         if 'delete' in request.form:
-            rename_filename = request.form.get('rename_filename')
+            filename = request.form.get('filename')
             csv_file = os.path.join(app.config['UPLOAD_FOLDER'], '../video_data.csv')
 
             if os.path.exists(csv_file):
                 df = pd.read_csv(csv_file)
-                df = df[df['rename_filename'] != rename_filename]
+                df = df[df['filename'] != filename]
                 df.to_csv(csv_file, index=False)
 
                 # Also delete the video file from the renames folder
-                file_path = os.path.join(RENAME_FOLDER, rename_filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 if os.path.exists(file_path):
                     os.remove(file_path)
 
-                flash(f'Video {rename_filename} deleted successfully.')
+                flash(f'Video {filename} deleted successfully.')
             else:
                 flash('No data file found.')
 
@@ -102,27 +100,21 @@ def video_upload_and_display():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             file.save(file_path)
 
-            # Save the uploaded file with the new filename in renames folder
-            rename_filename = f"{upload_time}{ext}"
-            rename_file_path = os.path.join(RENAME_FOLDER, rename_filename)
-            shutil.copyfile(file_path, rename_file_path)
 
             # Open the video to extract resolution
             try:
-                video = VideoFileClip(file_path)
-                
-                resolution = f"{video.w}x{video.h}"
                 _, video_captions = vp.get_caption(file_path)
-                # print(video_captions)
+                print(video_captions)
                 # all_caps = [f"Frame {i}: {video_captions[i]}" for i in video_captions]
                 # all_caps = '\n'.join(all_caps)
-                video.close()
+                num_frames = len(_)
+                # video_captions = "Not implemented yet-video_captions"
             except Exception as e:
                 flash(f"Could not process the video: {str(e)}")
                 return redirect(request.url)
-
+            llm_output = llm.run(str(num_frames-1), video_captions)
             # Save the details to CSV and return the updated data
-            df = save_video_details(new_filename, resolution, upload_time, rename_filename, video_captions)
+            df = save_video_details(new_filename, upload_time, llm_output, video_captions)
 
             # Redirect to the display page to prevent form resubmission
             return redirect(url_for('video_upload_and_display'))
