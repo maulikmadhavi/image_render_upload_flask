@@ -6,7 +6,8 @@ from decord import VideoReader
 from decord import cpu, gpu
 from tqdm import tqdm
 from groq import Groq
-
+import ollama
+  
 class Florence2:
     def __init__(self) -> None:
         print("***************** Florence2 initialized ******************" )
@@ -71,7 +72,6 @@ class VideoProcessor:
             time_caption_str = "\n".join([f"{k//fps}-{(k+time_step)//fps} sec: {v}" for k, v in caption_dict.items()])
         else:
             time_caption_str = "\n".join([f"{k}: {v}" for k, v in caption_dict.items()])
-        breakpoint()
         return caption_dict, time_caption_str
 class Model:
     def __init__(self) -> None:        
@@ -89,7 +89,6 @@ class LLM:
         self.client = Groq()
     
     def run(self, num_frames: str, caption: str):
-        breakpoint()
         prompt = f"""
         The following is a series of detailed image captions describing the content of a video frame by frame. The frames range from 0 seconds to {num_frames} seconds, with each frame depicting various scenes involving digital illustrations, computer screens, handwritten notes, and on-screen text. Your task is to generate a comprehensive summary of the video that captures the main themes and key events, without listing every individual frame description. Focus on providing an overview of the major changes or activities depicted in the frames and any recurring elements.
 
@@ -118,6 +117,55 @@ class LLM:
         )
         return str(completion.choices[0].message.content)
 
+class LLMOllama:
+    def __init__(self) -> None:
+        self.client = ollama.Client()
+    
+    def run(self, num_frames: str, caption: str):
+        prompt = f"""
+        The following is a series of detailed image captions describing the content of a video frame by frame. The frames range from 0 seconds to {num_frames} seconds, with each frame depicting various scenes involving digital illustrations, computer screens, handwritten notes, and on-screen text. Your task is to generate a comprehensive summary of the video that captures the main themes and key events, without listing every individual frame description. Focus on providing an overview of the major changes or activities depicted in the frames and any recurring elements.
+
+        Here is the list of image descriptions:
+        {caption}
+        """
+        
+        print("********************** ")
+        print(prompt)
+        print("****************")
+        
+        response = self.client.chat(model='mistral:latest', messages=[
+            {
+                'role': 'user',
+                'content': prompt
+            }
+        ])
+        
+        return response['message']['content']
+
+
+# class OllamaLLM:
+#     def __init__(self) -> None:
+        
+    
+#     You are given a list of captions that describe a series of images taken from a video, with each caption corresponding to a specific frame (from 0 seconds to 27 seconds). The images show various activities, including scenes of digital illustrations, computer screens, handwritten notes, and on-screen text.
+
+#     Your task is to create a brief but comprehensive summary that captures the key events, themes, and transitions in the video. Follow these instructions:
+
+#     Identify Major Themes: Focus on the main activities and recurring elements in the video, such as the digital illustrations, tasks displayed on the computer screen, and any writing on paper.
+#     Summarize Significant Changes: Highlight the major shifts in content over time (e.g., from blank screens to text appearing, or from handwritten notes to digital illustrations).
+#     Avoid Repetition: Combine similar events or themes across consecutive frames to avoid mentioning the same details repeatedly. For example, group frames that show writing on paper or similar text on the computer screen.
+#     Convey the Flow: Describe the sequence of events in a way that gives a clear sense of how the video progresses over time.
+
+#     Here is the list of captions for reference:
+
+#     (0-1 sec): Screenshots showing a blank lined paper on a computer screen with editing icons.
+#     (2-3 sec): A hand writing on a lined paper.
+#     (4-11 sec): Displaying text like "Retype Scanned/PDF Files" and tasks such as handling emails and research, with a digital character wearing a suit.
+#     (13-18 sec): Digital illustrations of a person, a lightbulb labeled "DJ," and text related to social media management.
+#     (19-21 sec): Graphics of charts, graphs, and animal illustrations with business-related text.
+#     (22-27 sec): Returns to lined paper with writing and mentions of PDF documents.
+
+# Generate a summary that combines these details into a coherent description of the video content, focusing on the major changes and recurring themes.
 
 
 

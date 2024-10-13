@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 import shutil
 import pandas as pd
-from utils import VideoProcessor, LLM
+from utils import VideoProcessor, LLMOllama
 
 
 # Initialize the Flask app
@@ -21,7 +21,7 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 #     os.makedirs(RENAME_FOLDER)
 
 vp = VideoProcessor()
-llm = LLM()
+llm = LLMOllama()
 # Function to save video details to CSV
 def save_video_details(filename, upload_time, summary, video_captions):
     data = {
